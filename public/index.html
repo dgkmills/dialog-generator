@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialogue Generation & Script Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for loader */
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Custom scrollbar for textarea */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Styles for topic chips */
+        .topic-chip {
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid transparent;
+        }
+        /* Styles for tabs */
+        .tab-button {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-button.active {
+            border-color: #4f46e5; /* indigo-600 */
+            color: #4f46e5;
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen">
+    <div id="app" class="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+            <header class="mb-6 text-center">
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Dialogue Generation Tool</h1>
+                <p class="text-gray-500 mt-2">Create multi-speaker audio from your script with customizable voices.</p>
+            </header>
+
+            <main>
+                <!-- Load Session Section -->
+                <div class="mb-6 p-4 bg-gray-100 rounded-lg">
+                    <label for="load-id-input" class="block text-sm font-medium text-gray-700 mb-2">Have a Session ID? Load it here.</label>
+                    <div class="flex gap-2">
+                        <input id="load-id-input" type="text" placeholder="Paste Session ID" class="flex-grow p-2 border border-gray-300 rounded-md">
+                        <button id="load-btn" class="bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700">Load</button>
+                    </div>
+                </div>
+
+                <!-- Gemini API Feature: Script Generation Tool -->
+                <div class="mb-6 p-4 bg-gray-100 rounded-lg">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">Script Generation Tool</h2>
+                    <p class="text-sm text-gray-600 mb-4">Automatically create a two-person dialogue script using AI.</p>
+                    
+                    <!-- Tabs Navigation -->
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav id="tabs-container" class="-mb-px flex space-x-4" aria-label="Tabs">
+                            <button data-tab="topics" class="tab-button active">General Topics</button>
+                            <button data-tab="kohsel" class="tab-button">Kohsel Topics</button>
+                            <button data-tab="custom" class="tab-button">Custom Words</button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Panels -->
+                    <div id="tab-panels-container">
+                        <!-- General Topics Panel -->
+                        <div id="topics-panel" class="tab-panel active">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">1. Select a Topic</label>
+                            <div id="topic-chips" class="flex flex-wrap gap-2">
+                                <button data-topic="Technology" class="topic-chip bg-indigo-600 text-white">Technology</button>
+                                <button data-topic="Food" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Food</button>
+                                <button data-topic="Fun" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Fun</button>
+                                <button data-topic="Travel" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Travel</button>
+                                <button data-topic="Work" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Work</button>
+                                <button data-topic="Silly" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Silly</button>
+                                <button data-topic="Knock-Knock Joke" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Knock-Knock Joke</button>
+                                <button data-topic="Dad Joke" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Dad Joke</button>
+                                <button data-topic="Expression" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Expression</button>
+                                <button data-topic="Idiom" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Idiom</button>
+                                <button data-topic="Adage" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Adage</button>
+                            </div>
+                        </div>
+
+                        <!-- Kohsel Topics Panel -->
+                        <div id="kohsel-panel" class="tab-panel">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">1. Select a Department Topic</label>
+                            <div id="kohsel-topic-chips" class="flex flex-wrap gap-2">
+                                <button data-topic="HR" class="topic-chip bg-indigo-600 text-white">HR</button>
+                                <button data-topic="Production" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Production</button>
+                                <button data-topic="Quality Control" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Quality Control</button>
+                                <button data-topic="Accounting" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Accounting</button>
+                                <button data-topic="Safety" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Safety</button>
+                                <button data-topic="Materials Purchasing" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Materials Purchasing</button>
+                                <button data-topic="Customer Service" class="topic-chip bg-gray-200 text-gray-700 hover:bg-gray-300">Customer Service</button>
+                            </div>
+                        </div>
+
+                        <!-- Custom Words Panel -->
+                        <div id="custom-panel" class="tab-panel">
+                             <label for="custom-words-input" class="block text-sm font-medium text-gray-700 mb-2">1. Enter Custom Words</label>
+                             <textarea id="custom-words-input" rows="3" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter a few words or a short phrase, e.g., coffee, deadline, report"></textarea>
+                        </div>
+                    </div>
+
+                    <label class="block text-sm font-medium text-gray-700 mt-4 mb-2">2. Generate & Copy</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button id="auto-generate-btn" class="flex-1 sm:flex-initial bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2 min-w-[200px]">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                            <span id="auto-generate-btn-text">Auto-generate Script</span>
+                        </button>
+                        <button id="copy-script-btn" class="flex-1 sm:flex-initial bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 flex items-center justify-center gap-2 min-w-[160px]" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                            <span>Copy Script</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Script Input Area -->
+                <div class="mb-6">
+                    <label for="script" class="block text-sm font-medium text-gray-700 mb-2">Your Script</label>
+                    <textarea id="script" rows="10" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow duration-200" placeholder="A generated or manually entered script will appear here.&#10;Use the format 'SpeakerName: Dialogue...'.&#10;&#10;For example:&#10;Jane: How's it going today, Joe?&#10;Joe: Not too bad, just working on this new project."></textarea>
+                </div>
+
+                <!-- Dynamic Voice Selectors -->
+                <div id="voice-selectors" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-4 items-center justify-center mb-6">
+                    <button id="generate-btn" class="flex-1 sm:flex-none justify-center min-w-[200px] bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 disabled:bg-indigo-400 disabled:cursor-not-allowed flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                        <span id="generate-btn-text">Generate Dialogue</span>
+                    </button>
+                    <button id="clear-btn" class="flex-1 sm:flex-none justify-center min-w-[160px] bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-all duration-300">Clear Form</button>
+                    <button id="share-btn" class="flex-1 sm:flex-none justify-center min-w-[160px] bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 disabled:bg-green-400 disabled:cursor-not-allowed">Share Session</button>
+                </div>
+
+                <!-- Share Section -->
+                <div id="share-section" class="hidden mb-6 p-4 bg-gray-100 rounded-lg">
+                    <label for="share-id" class="block text-sm font-medium text-gray-700 mb-2">Shareable Session ID</label>
+                    <div class="flex gap-2">
+                        <input id="share-id" type="text" readonly class="flex-grow p-2 border border-gray-300 rounded-md bg-white font-mono">
+                        <button id="copy-share-id-btn" class="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-600">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Audio Output -->
+                <div id="audio-output" class="hidden text-center p-4 bg-gray-100 rounded-lg">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Generated Audio</h3>
+                    <audio id="audio-player" controls class="w-full"></audio>
+                    <a id="download-btn" href="#" download="dialogue.wav" class="inline-block mt-4 bg-blue-500 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-600 transition-colors">Download Audio</a>
+                </div>
+
+                <!-- Error Message -->
+                <div id="error-message" class="hidden mt-4 p-4 bg-red-100 text-red-700 border border-red-200 rounded-lg text-center"></div>
+            </main>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DOM Elements ---
+        const scriptTextarea = document.getElementById('script');
+        const voiceSelectorsContainer = document.getElementById('voice-selectors');
+        const generateBtn = document.getElementById('generate-btn');
+        const generateBtnText = document.getElementById('generate-btn-text');
+        const clearBtn = document.getElementById('clear-btn');
+        const shareBtn = document.getElementById('share-btn');
+        const shareSection = document.getElementById('share-section');
+        const shareIdInput = document.getElementById('share-id');
+        const copyShareIdBtn = document.getElementById('copy-share-id-btn');
+        const audioOutput = document.getElementById('audio-output');
+        const audioPlayer = document.getElementById('audio-player');
+        const downloadBtn = document.getElementById('download-btn');
+        const errorMessageDiv = document.getElementById('error-message');
+        const loadIdInput = document.getElementById('load-id-input');
+        const loadBtn = document.getElementById('load-btn');
+        
+        // --- Script Generation DOM Elements ---
+        const autoGenerateBtn = document.getElementById('auto-generate-btn');
+        const autoGenerateBtnText = document.getElementById('auto-generate-btn-text');
+        const copyScriptBtn = document.getElementById('copy-script-btn');
+        const tabsContainer = document.getElementById('tabs-container');
+        const topicChipsContainer = document.getElementById('topic-chips');
+        const kohselTopicChipsContainer = document.getElementById('kohsel-topic-chips');
+        const customWordsInput = document.getElementById('custom-words-input');
+
+        // --- Voice Data ---
+        const voices = {
+            Female: ["Zephyr", "Leda", "Aoede", "Callirrhoe", "Autonoe", "Enceladus", "Umbriel", "Despina", "Erinome", "Sadachbia", "Vindemiatrix"],
+            Male: ["Puck", "Charon", "Kore", "Fenrir", "Orus", "Iapetus", "Algieba", "Algenib"]
+        };
+        const defaultVoices = {
+            female: "Zephyr",
+            male: "Puck",
+            all: [...voices.Female, ...voices.Male]
+        };
+
+        // --- App State ---
+        let detectedSpeakers = new Map(); // speakerName -> selectedVoice
+        let currentAudioBlobUrl = null;
+        let generationMode = 'topics'; // 'topics', 'kohsel', or 'custom'
+        let selectedTopic = 'Technology'; // Default topic for script generation
+
+        // --- Firebase Setup ---
+        let db;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'dialogue-tool-default';
+        try {
+            const firebaseConfig = {
+               apiKey: "AIzaSyCWVaIcwE9dokmpSw5MU069qipIRByOoN0",
+               authDomain: "dialogue-generation-tool.firebaseapp.com",
+               projectId: "dialogue-generation-tool",
+               storageBucket: "dialogue-generation-tool.firebasestorage.app",
+               messagingSenderId: "71233569865",
+               appId: "1:71233569865:web:f549bb2636b9f3f3296b98"
+            };
+
+            if (Object.keys(firebaseConfig).length >= 6 && !firebaseConfig.apiKey.includes("YOUR_API")) {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                const auth = getAuth(app);
+                await signInAnonymously(auth);
+            } else {
+                console.warn("Firebase config not found or is incomplete. Save/Share functionality will be disabled.");
+                shareBtn.disabled = true;
+                loadBtn.disabled = true;
+                shareBtn.title = "Firebase is not configured.";
+                document.getElementById('load-id-input').disabled = true;
+            }
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            showError("Could not connect to database. Save/Share is disabled.");
+            shareBtn.disabled = true;
+        }
+
+
+        // --- Functions ---
+
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorMessageDiv.classList.add('hidden');
+        }
+
+        function updateSpeakerUI() {
+            const script = scriptTextarea.value;
+            const speakerRegex = /^\s*([a-zA-Z0-9_]+):/gm;
+            let match;
+            const currentSpeakersInScript = new Set();
+            while ((match = speakerRegex.exec(script)) !== null) {
+                currentSpeakersInScript.add(match[1]);
+            }
+
+            const existingSpeakersInUI = new Set(detectedSpeakers.keys());
+
+            for (const speaker of existingSpeakersInUI) {
+                if (!currentSpeakersInScript.has(speaker)) {
+                    detectedSpeakers.delete(speaker);
+                    const selectorEl = voiceSelectorsContainer.querySelector(`[data-speaker="${speaker}"]`);
+                    if (selectorEl) selectorEl.remove();
+                }
+            }
+
+            for (const speaker of currentSpeakersInScript) {
+                if (!existingSpeakersInUI.has(speaker)) {
+                    let defaultVoice;
+                    if (speaker.toLowerCase() === 'jane') {
+                        defaultVoice = defaultVoices.female;
+                    } else if (speaker.toLowerCase() === 'joe') {
+                        defaultVoice = defaultVoices.male;
+                    } else {
+                        // Fallback for any other speakers
+                        defaultVoice = defaultVoices.all[detectedSpeakers.size % defaultVoices.all.length];
+                    }
+                    detectedSpeakers.set(speaker, defaultVoice);
+                    createVoiceSelector(speaker, defaultVoice);
+                }
+            }
+            
+            const isScriptEmpty = script.trim().length === 0;
+            shareBtn.disabled = isScriptEmpty || !db;
+            copyScriptBtn.disabled = isScriptEmpty;
+            generateBtn.disabled = isScriptEmpty;
+        }
+        
+        function createVoiceSelector(speaker, selectedVoice) {
+            const wrapper = document.createElement('div');
+            wrapper.dataset.speaker = speaker;
+            wrapper.className = 'flex flex-col';
+
+            const label = document.createElement('label');
+            label.htmlFor = `voice-${speaker}`;
+            label.className = 'text-sm font-medium text-gray-700 mb-1';
+            label.textContent = `Voice for ${speaker}`;
+            
+            const select = document.createElement('select');
+            select.id = `voice-${speaker}`;
+            select.className = 'w-full p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500';
+            
+            Object.entries(voices).forEach(([gender, voiceList]) => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = gender;
+                voiceList.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.value = voice;
+                    option.textContent = voice;
+                    if (voice === selectedVoice) option.selected = true;
+                    optgroup.appendChild(option);
+                });
+                select.appendChild(optgroup);
+            });
+
+            select.addEventListener('change', (e) => {
+                detectedSpeakers.set(speaker, e.target.value);
+            });
+            
+            wrapper.appendChild(label);
+            wrapper.appendChild(select);
+            voiceSelectorsContainer.appendChild(wrapper);
+        }
+
+        function setTTSLoading(isLoading) {
+            if (isLoading) {
+                generateBtn.disabled = true;
+                generateBtnText.innerHTML = '<span class="loader"></span> Generating...';
+            } else {
+                generateBtn.disabled = scriptTextarea.value.trim().length === 0;
+                generateBtnText.textContent = 'Generate Dialogue';
+            }
+        }
+
+        // --- SCRIPT GENERATION FUNCTIONS ---
+
+        function setScriptGenLoading(isLoading) {
+            if (isLoading) {
+                autoGenerateBtn.disabled = true;
+                autoGenerateBtnText.innerHTML = '<span class="loader"></span> Generating...';
+            } else {
+                autoGenerateBtn.disabled = false;
+                autoGenerateBtnText.textContent = 'Auto-generate Script';
+            }
+        }
+
+        function copyScript() {
+            if (scriptTextarea.value.trim().length > 0) {
+                scriptTextarea.select();
+                document.execCommand('copy');
+                const originalText = copyScriptBtn.querySelector('span').textContent;
+                copyScriptBtn.querySelector('span').textContent = 'Copied!';
+                setTimeout(() => {
+                    copyScriptBtn.querySelector('span').textContent = "Copy Script";
+                }, 2000);
+            } else {
+                showError("There's no script to copy.");
+            }
+        }
+
+        async function autoGenerateScript() {
+            hideError();
+            setScriptGenLoading(true);
+            scriptTextarea.value = ''; 
+            updateSpeakerUI();
+
+            const systemPrompt = `You are a creative writer. Your task is to generate a brief, two-person dialogue script.`;
+            let userQuery = '';
+
+            switch(generationMode) {
+                case 'topics':
+                    const jokeAndExpressionTopics = {
+                        "Silly": `Write a short, nonsensical, and silly two-person dialogue. The speakers must be named 'Joe' and 'Jane'.`,
+                        "Knock-Knock Joke": `Write a short knock-knock joke formatted as a two-person dialogue. The speakers must be named 'Joe' and 'Jane'.`,
+                        "Dad Joke": `Write a short "dad joke" formatted as a two-person dialogue. One person tells the joke, the other groans or reacts. The speakers must be named 'Joe' and 'Jane'.`,
+                        "Expression": `Write a short, simple, two-person dialogue where one person (Jane) asks about a common expression, and the other person (Joe) explains what it means.`,
+                        "Idiom": `Write a short, simple, two-person dialogue where one person (Jane) asks about a common idiom, and the other person (Joe) explains what it means.`,
+                        "Adage": `Write a short, simple, two-person dialogue where one person (Jane) asks about a common adage, and the other person (Joe) explains what it means.`
+                    };
+
+                    if (jokeAndExpressionTopics[selectedTopic]) {
+                        userQuery = `${jokeAndExpressionTopics[selectedTopic]} The script should have between 4 and 6 lines of dialogue. The output must be only the script and follow this format exactly, with each line of dialogue on a new line:\nJane: [dialogue]\nJoe: [dialogue]\nDo not include any other text, titles, introductions, or quotation marks.`;
+                    } else {
+                        // Default handler for general topics
+                        userQuery = `Write a short, simple, two-person dialogue between a man and a woman about the topic of "${selectedTopic}". The speakers must be named 'Joe' and 'Jane'. The script should have between 4 and 6 lines of dialogue. The output must be only the script and follow this format exactly, with each line of dialogue on a new line:\nJane: [dialogue]\nJoe: [dialogue]\nDo not include any other text, titles, introductions, or quotation marks.`;
+                    }
+                    break;
+                case 'kohsel':
+                    userQuery = `Write a short, professional office conversation between two colleagues, 'Joe' and 'Jane', at a transformer manufacturing company. The conversation should be about the "${selectedTopic}" department. The script should have between 4 and 6 lines of dialogue. The output must be only the script and follow this format exactly, with each line of dialogue on a new line:\nJane: [dialogue]\nJoe: [dialogue]\nDo not include any other text, titles, introductions, or quotation marks.`;
+                    break;
+                case 'custom':
+                    const customWords = customWordsInput.value.trim();
+                    if (!customWords) {
+                        showError("Please enter some custom words to generate a script.");
+                        setScriptGenLoading(false);
+                        return;
+                    }
+                    userQuery = `Write a short, simple, two-person dialogue between a man and a woman that incorporates the following words or concepts: "${customWords}". The speakers must be named 'Joe' and 'Jane'. The script should have between 4 and 6 lines of dialogue. The output must be only the script and follow this format exactly, with each line of dialogue on a new line:\nJane: [dialogue]\nJoe: [dialogue]\nDo not include any other text, titles, introductions, or quotation marks.`;
+                    break;
+            }
+            
+            const apiKey = "AIzaSyCJOHpZbeKqIzkPNnypVWxAX_-o2_inp34";
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API request failed: ${errorText}`);
+                }
+
+                const result = await response.json();
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (generatedText) {
+                    scriptTextarea.value = generatedText.trim();
+                    updateSpeakerUI(); 
+                } else {
+                    throw new Error("No script was generated. The API response was empty.");
+                }
+
+            } catch (error) {
+                console.error("Script generation error:", error);
+                showError(`Failed to generate script: ${error.message}`);
+            } finally {
+                setScriptGenLoading(false);
+            }
+        }
+
+        // --- AUDIO CONVERSION & TTS ---
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function pcmToWav(pcmData, sampleRate) {
+            const numChannels = 1, bitsPerSample = 16;
+            const blockAlign = (numChannels * bitsPerSample) / 8;
+            const byteRate = sampleRate * blockAlign;
+            const dataSize = pcmData.length * pcmData.BYTES_PER_ELEMENT;
+            const buffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(buffer);
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            const pcm16 = new Int16Array(pcmData.buffer);
+            for (let i = 0; i < pcm16.length; i++) {
+                view.setInt16(44 + i * 2, pcm16[i], true);
+            }
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+        
+        async function generateDialogue() {
+            const script = scriptTextarea.value.trim();
+            if (!script) {
+                showError("Script cannot be empty.");
+                return;
+            }
+            if (detectedSpeakers.size === 0) {
+                showError("No speakers detected. Use the 'SpeakerName:' format.");
+                return;
+            }
+
+            hideError();
+            setTTSLoading(true);
+            
+            const speakerVoiceConfigs = Array.from(detectedSpeakers.entries()).map(([speaker, voice]) => ({
+                speaker: speaker,
+                voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } }
+            }));
+
+            const payload = {
+                contents: [{ parts: [{ text: `TTS the following conversation:\n${script}` }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: { multiSpeakerVoiceConfig: { speakerVoiceConfigs } }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+
+            const apiKey = "AIzaSyCJOHpZbeKqIzkPNnypVWxAX_-o2_inp34";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                   const errorData = await response.json().catch(() => ({error: {message: 'An unknown API error occurred.'}}));
+                   throw new Error(errorData.error.message);
+                }
+                
+                const result = await response.json();
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (audioData && mimeType?.startsWith("audio/")) {
+                    const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 24000;
+                    
+                    const pcmBuffer = base64ToArrayBuffer(audioData);
+                    const pcm16 = new Int16Array(pcmBuffer);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    
+                    if(currentAudioBlobUrl) URL.revokeObjectURL(currentAudioBlobUrl);
+                    currentAudioBlobUrl = URL.createObjectURL(wavBlob);
+                    
+                    audioPlayer.src = currentAudioBlobUrl;
+                    downloadBtn.href = currentAudioBlobUrl;
+                    audioOutput.classList.remove('hidden');
+                } else {
+                   throw new Error("No audio data found in API response.");
+                }
+            } catch (error) {
+                console.error("Dialogue generation error:", error);
+                showError(`Failed to generate audio: ${error.message}`);
+            } finally {
+                setTTSLoading(false);
+            }
+        }
+        
+        function clearForm() {
+            scriptTextarea.value = '';
+            voiceSelectorsContainer.innerHTML = '';
+            audioOutput.classList.add('hidden');
+            shareSection.classList.add('hidden');
+            if (currentAudioBlobUrl) {
+                URL.revokeObjectURL(currentAudioBlobUrl);
+                currentAudioBlobUrl = null;
+            }
+            detectedSpeakers.clear();
+            hideError();
+            shareBtn.disabled = true;
+            copyScriptBtn.disabled = true;
+            generateBtn.disabled = true;
+        }
+
+        // --- SESSION MANAGEMENT (SAVE/LOAD) ---
+        async function saveSession() {
+            if (!db) {
+                showError("Database connection not available.");
+                return;
+            }
+            const script = scriptTextarea.value.trim();
+            const voiceSelections = Object.fromEntries(detectedSpeakers);
+            if (!script) {
+                showError("Cannot save an empty script.");
+                return;
+            }
+            try {
+                const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/dialogues`), {
+                    script: script,
+                    voices: voiceSelections,
+                    createdAt: new Date().toISOString()
+                });
+                shareIdInput.value = docRef.id;
+                shareSection.classList.remove('hidden');
+                copyShareIdBtn.textContent = 'Copy';
+            } catch(error) {
+                console.error("Error saving session:", error);
+                showError("Failed to save session. Please try again.");
+            }
+        }
+
+        function copyShareId() {
+            shareIdInput.select();
+            document.execCommand('copy');
+            copyShareIdBtn.textContent = 'Copied!';
+        }
+
+        async function loadSession(sessionId) {
+            if (!db) {
+                showError("Cannot load session, database not available.");
+                return;
+            }
+            try {
+                const docRef = doc(db, `artifacts/${appId}/public/data/dialogues`, sessionId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    scriptTextarea.value = data.script || '';
+                    updateSpeakerUI(); 
+                    
+                    if (data.voices) {
+                        Object.entries(data.voices).forEach(([speaker, voice]) => {
+                            if(detectedSpeakers.has(speaker)){
+                                detectedSpeakers.set(speaker, voice);
+                                const selector = document.getElementById(`voice-${speaker}`);
+                                if(selector) selector.value = voice;
+                            }
+                        });
+                    }
+                    await generateDialogue(); 
+                } else {
+                    showError("The requested session could not be found.");
+                }
+            } catch (error) {
+                console.error("Error loading session:", error);
+                showError("Failed to load the session.");
+            }
+        }
+
+        // --- Event Listeners ---
+        scriptTextarea.addEventListener('input', updateSpeakerUI);
+        generateBtn.addEventListener('click', generateDialogue);
+        clearBtn.addEventListener('click', clearForm);
+        shareBtn.addEventListener('click', saveSession);
+        copyShareIdBtn.addEventListener('click', copyShareId);
+        loadBtn.addEventListener('click', () => {
+            const sessionId = loadIdInput.value.trim();
+            if (sessionId) loadSession(sessionId);
+            else showError("Please enter a Session ID to load.");
+        });
+
+        // Event listener for tab switching
+        tabsContainer.addEventListener('click', (e) => {
+            if (e.target.dataset.tab) {
+                const targetTab = e.target.dataset.tab;
+                generationMode = targetTab;
+
+                tabsContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+
+                document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+                document.getElementById(`${targetTab}-panel`).classList.add('active');
+                
+                // Set the default topic when switching to a topic tab
+                if (targetTab === 'topics') {
+                    selectedTopic = topicChipsContainer.querySelector('.bg-indigo-600').dataset.topic;
+                } else if (targetTab === 'kohsel') {
+                    selectedTopic = kohselTopicChipsContainer.querySelector('.bg-indigo-600').dataset.topic;
+                }
+            }
+        });
+
+        function handleTopicChipClick(container) {
+             container.querySelectorAll('.topic-chip').forEach(chip => {
+                chip.classList.remove('bg-indigo-600', 'text-white');
+                chip.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            });
+            event.target.classList.add('bg-indigo-600', 'text-white');
+            event.target.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+            selectedTopic = event.target.dataset.topic;
+        }
+
+        topicChipsContainer.addEventListener('click', (event) => {
+            if (event.target.dataset.topic) handleTopicChipClick(topicChipsContainer);
+        });
+        kohselTopicChipsContainer.addEventListener('click', (event) => {
+             if (event.target.dataset.topic) handleTopicChipClick(kohselTopicChipsContainer);
+        });
+
+        autoGenerateBtn.addEventListener('click', autoGenerateScript);
+        copyScriptBtn.addEventListener('click', copyScript);
+
+        // --- Initial Load ---
+        window.addEventListener('load', () => {
+            updateSpeakerUI();
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session');
+            if (sessionId) loadSession(sessionId);
+        });
+    </script>
+</body>
+</html>
+
+
+
