@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="manifest" href="/manifest.json">
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -82,7 +85,6 @@
             </header>
 
             <main>
-                <!-- Load Session Section -->
                 <div class="mb-6 p-4 bg-gray-100 rounded-lg">
                     <label for="load-id-input" class="block text-sm font-medium text-gray-700 mb-2">Have a Session ID? Load it here.</label>
                     <div class="flex gap-2">
@@ -91,12 +93,10 @@
                     </div>
                 </div>
 
-                <!-- Gemini API Feature: Script Generation Tool -->
                 <div class="mb-6 p-4 bg-gray-100 rounded-lg">
                     <h2 class="text-lg font-semibold text-gray-800 mb-3">Script Generation Tool</h2>
                     <p class="text-sm text-gray-600 mb-4">Automatically create a two-person dialogue script using AI.</p>
                     
-                    <!-- Tabs Navigation -->
                     <div class="border-b border-gray-200 mb-4">
                         <nav id="tabs-container" class="-mb-px flex space-x-4" aria-label="Tabs">
                             <button data-tab="topics" class="tab-button active">General Topics</button>
@@ -105,9 +105,7 @@
                         </nav>
                     </div>
 
-                    <!-- Tab Panels -->
                     <div id="tab-panels-container">
-                        <!-- General Topics Panel -->
                         <div id="topics-panel" class="tab-panel active">
                             <label class="block text-sm font-medium text-gray-700 mb-2">1. Select a Topic</label>
                             <div id="topic-chips" class="flex flex-wrap gap-2">
@@ -125,7 +123,6 @@
                             </div>
                         </div>
 
-                        <!-- Kohsel Topics Panel -->
                         <div id="kohsel-panel" class="tab-panel">
                             <label class="block text-sm font-medium text-gray-700 mb-2">1. Select a Department Topic</label>
                             <div id="kohsel-topic-chips" class="flex flex-wrap gap-2">
@@ -139,7 +136,6 @@
                             </div>
                         </div>
 
-                        <!-- Custom Words Panel -->
                         <div id="custom-panel" class="tab-panel">
                              <label for="custom-words-input" class="block text-sm font-medium text-gray-700 mb-2">1. Enter Custom Words</label>
                              <textarea id="custom-words-input" rows="3" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter a few words or a short phrase, e.g., coffee, deadline, report"></textarea>
@@ -159,16 +155,13 @@
                     </div>
                 </div>
 
-                <!-- Script Input Area -->
                 <div class="mb-6">
                     <label for="script" class="block text-sm font-medium text-gray-700 mb-2">Your Script</label>
                     <textarea id="script" rows="10" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow duration-200" placeholder="A generated or manually entered script will appear here.&#10;Use the format 'SpeakerName: Dialogue...'.&#10;&#10;For example:&#10;Jane: How's it going today, Joe?&#10;Joe: Not too bad, just working on this new project."></textarea>
                 </div>
 
-                <!-- Dynamic Voice Selectors -->
                 <div id="voice-selectors" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
 
-                <!-- Action Buttons -->
                 <div class="flex flex-wrap gap-4 items-center justify-center mb-6">
                     <button id="generate-btn" class="flex-1 sm:flex-none justify-center min-w-[200px] bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 disabled:bg-indigo-400 disabled:cursor-not-allowed flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
@@ -178,7 +171,6 @@
                     <button id="share-btn" class="flex-1 sm:flex-none justify-center min-w-[160px] bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 disabled:bg-green-400 disabled:cursor-not-allowed">Share Session</button>
                 </div>
 
-                <!-- Share Section -->
                 <div id="share-section" class="hidden mb-6 p-4 bg-gray-100 rounded-lg">
                     <label for="share-id" class="block text-sm font-medium text-gray-700 mb-2">Shareable Session ID</label>
                     <div class="flex gap-2">
@@ -187,14 +179,12 @@
                     </div>
                 </div>
 
-                <!-- Audio Output -->
                 <div id="audio-output" class="hidden text-center p-4 bg-gray-100 rounded-lg">
                     <h3 class="text-lg font-medium text-gray-800 mb-4">Generated Audio</h3>
                     <audio id="audio-player" controls class="w-full"></audio>
                     <a id="download-btn" href="#" download="dialogue.wav" class="inline-block mt-4 bg-blue-500 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-600 transition-colors">Download Audio</a>
                 </div>
 
-                <!-- Error Message -->
                 <div id="error-message" class="hidden mt-4 p-4 bg-red-100 text-red-700 border border-red-200 rounded-lg text-center"></div>
             </main>
         </div>
@@ -746,8 +736,19 @@
             if (sessionId) loadSession(sessionId);
         });
     </script>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(err => {
+              console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+      }
+    </script>
 </body>
 </html>
-
-
-
