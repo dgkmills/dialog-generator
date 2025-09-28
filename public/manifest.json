@@ -1,11 +1,11 @@
 {
-  "name": "Dialog Generator",
-  "short_name": "DialogGen",
+  "name": "Dialogue Generator",
+  "short_name": "D Gen",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4A90E2",
-  "description": "A tool for generating conversational dialogs.",
+  "description": "A tool for generating conversational dialogues.",
   "icons": [
     {
       "src": "https://placehold.co/192x192/4A90E2/FFFFFF?text=DG",

@@ -1,5 +1,5 @@
 // Define a name for the cache
-const CACHE_NAME = 'dialog-generator-cache-v2';
+const CACHE_NAME = 'dialogue-generator-cache-v3';
 // List the files to be cached for offline use
 const urlsToCache = [
   '/',
